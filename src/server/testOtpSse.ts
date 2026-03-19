@@ -7,6 +7,7 @@ export interface BroadcastTestOtpPayload {
 	email: string;
 	code: string;
 	name?: string;
+	token?: string;
 }
 
 const connections = new Map<
@@ -17,7 +18,13 @@ const connections = new Map<
 /** Last emitted payloads (test only) so e2e can fetch OTP without relying on SSE timing. */
 const lastPayloads = new Map<
 	TestOtpEventType,
-	{ email: string; code: string; issuedAt: string; name?: string }
+	{
+		email: string;
+		code: string;
+		issuedAt: string;
+		name?: string;
+		token?: string;
+	}
 >();
 
 function formatSseMessage(eventName: string, payload: unknown): Uint8Array {
@@ -75,7 +82,7 @@ export function broadcastTestOtp(payload: BroadcastTestOtpPayload): void {
 		return;
 	}
 
-	const { type, email, code, name } = payload;
+	const { type, email, code, name, token } = payload;
 	const issuedAt = new Date().toISOString();
 
 	// Centralized console logging
@@ -93,10 +100,23 @@ export function broadcastTestOtp(payload: BroadcastTestOtpPayload): void {
 	}
 
 	// Store for test retrieval (same shape as SSE payload)
-	lastPayloads.set(type, { email, code, issuedAt, ...(name && { name }) });
+	lastPayloads.set(type, {
+		email,
+		code,
+		issuedAt,
+		...(name && { name }),
+		...(token && { token }),
+	});
 
 	// SSE broadcast
-	const ssePayload = { type, email, code, issuedAt, ...(name && { name }) };
+	const ssePayload = {
+		type,
+		email,
+		code,
+		issuedAt,
+		...(name && { name }),
+		...(token && { token }),
+	};
 	const deadIds: string[] = [];
 	for (const [id, controller] of connections) {
 		try {
@@ -115,6 +135,14 @@ export function broadcastTestOtp(payload: BroadcastTestOtpPayload): void {
  */
 export function getLastTestOtp(
 	type: TestOtpEventType,
-): { email: string; code: string; issuedAt: string; name?: string } | null {
+):
+	| {
+			email: string;
+			code: string;
+			issuedAt: string;
+			name?: string;
+			token?: string;
+	  }
+	| null {
 	return lastPayloads.get(type) ?? null;
 }

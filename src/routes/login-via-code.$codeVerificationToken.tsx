@@ -20,7 +20,7 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useToastMutation } from "@/hooks/useToastMutation";
 import { redirectToSchema } from "@/lib/schemas";
 import { verifyLoginCodeAndAuthenticate } from "@/server/auth";
-import { verifyCodeVerificationToken } from "@/server/jwt";
+import { validateCodeVerificationToken } from "@/server/jwt";
 
 export const Route = createFileRoute("/login-via-code/$codeVerificationToken")(
 	{
@@ -28,7 +28,9 @@ export const Route = createFileRoute("/login-via-code/$codeVerificationToken")(
 		beforeLoad: async ({ params }) => {
 			try {
 				// Verify token exists and is valid format (but don't authenticate yet)
-				await verifyCodeVerificationToken(params.codeVerificationToken);
+				await validateCodeVerificationToken({
+					data: { token: params.codeVerificationToken },
+				});
 				return { tokenValid: true };
 			} catch (error) {
 				const errorMessage =

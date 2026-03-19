@@ -14,7 +14,7 @@ import "dotenv/config";
  */
 
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,6 +33,11 @@ function main(): void {
 	process.env.DATABASE_URL = "./db.test.sqlite";
 	process.env.NODE_ENV = "test";
 	process.env.SITE_URL = "http://localhost:3001";
+	const testDbPath = join(projectRoot, "db.test.sqlite");
+
+	if (existsSync(testDbPath)) {
+		rmSync(testDbPath);
+	}
 
 	console.log("E2E bootstrap: pushing schema to db.test.sqlite...");
 	execSync("pnpm db:push", {

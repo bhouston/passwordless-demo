@@ -1,3 +1,4 @@
+import { createServerFn } from "@tanstack/react-start";
 import { jwtVerify, SignJWT } from "jose";
 import { getEnvConfig } from "./env";
 
@@ -125,6 +126,28 @@ export async function verifyCodeVerificationToken(
 		throw new Error("Token verification failed: Unknown error");
 	}
 }
+
+const codeVerificationTokenSchema = {
+	parse(data: unknown) {
+		if (
+			!data ||
+			typeof data !== "object" ||
+			!("token" in data) ||
+			typeof (data as { token: unknown }).token !== "string"
+		) {
+			throw new Error("Token is required");
+		}
+
+		return { token: (data as { token: string }).token };
+	},
+};
+
+export const validateCodeVerificationToken = createServerFn({ method: "GET" })
+	.inputValidator((data: unknown) => codeVerificationTokenSchema.parse(data))
+	.handler(async ({ data }) => {
+		await verifyCodeVerificationToken(data.token);
+		return { valid: true };
+	});
 
 /**
  * Creates a JWT token for passkey challenge verification

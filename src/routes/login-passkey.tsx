@@ -1,4 +1,3 @@
-import { startAuthentication } from "@simplewebauthn/browser";
 import { useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -12,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useToastMutation } from "@/hooks/useToastMutation";
 import { useSessionUser } from "@/hooks/useSessionUser";
+import {
+	isWebAuthnSupported,
+	startPasskeyAuthentication,
+} from "@/lib/webauthnClient";
 import { redirectToSchema } from "@/lib/schemas";
 import {
 	initiatePasskeyDiscovery,
@@ -36,9 +39,6 @@ function LoginPasskeyPage() {
 	const hasAttemptedRef = useRef(false);
 
 	// Check if WebAuthn is supported
-	const isWebAuthnSupported =
-		typeof window !== "undefined" && "PublicKeyCredential" in window;
-
 	const passkeyLoginMutation = useToastMutation({
 		action: "Passkey Login",
 		toastSuccess: false, // Don't show toast, we'll redirect immediately
@@ -53,7 +53,7 @@ function LoginPasskeyPage() {
 				}
 
 				// Start WebAuthn authentication
-				const authenticationResponse = await startAuthentication({
+				const authenticationResponse = await startPasskeyAuthentication({
 					optionsJSON: result.options,
 				});
 
@@ -130,7 +130,7 @@ function LoginPasskeyPage() {
 		}
 
 		// Check WebAuthn support
-		if (!isWebAuthnSupported) {
+		if (!isWebAuthnSupported()) {
 			setError(
 				"Passkeys are not supported in this browser. Please use a modern browser.",
 			);
@@ -141,7 +141,7 @@ function LoginPasskeyPage() {
 		// Trigger passkey authentication
 		hasAttemptedRef.current = true;
 		void passkeyLoginMutation.mutateAsync();
-	}, [sessionUser, isWebAuthnSupported, redirectTo, navigate, passkeyLoginMutation]);
+	}, [sessionUser, redirectTo, navigate, passkeyLoginMutation]);
 
 	// Redirect if already logged in
 	if (sessionUser) {
@@ -149,7 +149,7 @@ function LoginPasskeyPage() {
 	}
 
 	// Show error if WebAuthn not supported
-	if (!isWebAuthnSupported) {
+	if (!isWebAuthnSupported()) {
 		return (
 			<AuthLayout title="Passkey Not Supported">
 				<div className="space-y-4">

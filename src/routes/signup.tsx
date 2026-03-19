@@ -1,5 +1,11 @@
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useNavigate,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
@@ -40,8 +46,20 @@ export const Route = createFileRoute("/signup")({
 			// Otherwise, user is not logged in, continue to signup page
 		}
 	},
-	component: SignupPage,
+	component: SignupRouteComponent,
 });
+
+function SignupRouteComponent() {
+	const pathname = useRouterState({
+		select: (state) => state.location.pathname,
+	});
+
+	if (pathname !== "/signup") {
+		return <Outlet />;
+	}
+
+	return <SignupPage />;
+}
 
 function SignupPage() {
 	const navigate = useNavigate();

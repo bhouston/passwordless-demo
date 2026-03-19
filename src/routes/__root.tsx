@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/layout/Header";
@@ -42,6 +43,14 @@ export const Route = createRootRoute({
 	shellComponent: RootDocument,
 });
 
+function HydrationMarker() {
+	useEffect(() => {
+		document.body.dataset.hydrated = "true";
+	}, []);
+
+	return null;
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<QueryClientProvider client={queryClient}>
@@ -49,7 +58,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<head>
 					<HeadContent />
 				</head>
-				<body>
+				<body
+					data-hydrated="false"
+					data-node-env={process.env.NODE_ENV ?? "development"}
+				>
+					<HydrationMarker />
 					<Header />
 					{children}
 					<TanStackDevtools

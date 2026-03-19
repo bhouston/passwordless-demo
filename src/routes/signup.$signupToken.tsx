@@ -19,13 +19,15 @@ import { InvalidLink } from "@/components/auth/InvalidLink";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useToastMutation } from "@/hooks/useToastMutation";
 import { verifySignupOTPAndCreateUser } from "@/server/auth";
-import { verifyCodeVerificationToken } from "@/server/jwt";
+import { validateCodeVerificationToken } from "@/server/jwt";
 
 export const Route = createFileRoute("/signup/$signupToken")({
 	beforeLoad: async ({ params }) => {
 		try {
 			// Verify token exists and is valid format (but don't create user yet)
-			await verifyCodeVerificationToken(params.signupToken);
+			await validateCodeVerificationToken({
+				data: { token: params.signupToken },
+			});
 			return { tokenValid: true };
 		} catch (error) {
 			const errorMessage =

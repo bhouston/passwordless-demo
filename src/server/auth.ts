@@ -127,6 +127,7 @@ export const requestSignupOTP = createServerFn({ method: "POST" })
 			email: data.email,
 			code,
 			name: data.name,
+			token,
 		});
 
 		return { success: true, token };
@@ -321,6 +322,7 @@ export const requestLoginCode = createServerFn({ method: "POST" })
 				type: "login-otp",
 				email: user.email,
 				code,
+				token,
 			});
 		} else {
 			// User doesn't exist - mark attempt as bad-email

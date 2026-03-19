@@ -1,10 +1,10 @@
-import { startRegistration } from "@simplewebauthn/browser";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldSet } from "@/components/ui/field";
+import { startPasskeyRegistration } from "@/lib/webauthnClient";
 import {
 	deletePasskey,
 	generateRegistrationOptions,
@@ -50,7 +50,7 @@ export function PasskeyComponent({
 			}
 
 			// Start registration on client
-			const registrationResponse = await startRegistration({
+			const registrationResponse = await startPasskeyRegistration({
 				optionsJSON: result.options,
 			});
 

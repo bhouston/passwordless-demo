@@ -33,7 +33,7 @@ pnpm test
 
 ### E2E (Playwright)
 
-The auth OTP flow can be tested end-to-end using Playwright. The test signs up, logs out, and logs back in via email code, using the test-only OTP endpoints to retrieve codes.
+The auth OTP and passkey flows can be tested end-to-end using Playwright. The OTP tests use the test-only OTP endpoints to retrieve issued codes, and the passkey tests use a Chromium virtual authenticator to exercise the real WebAuthn flow without hardware.
 
 1. **Bootstrap the test database** (once, or when you need a clean DB):
 
@@ -53,7 +53,7 @@ The auth OTP flow can be tested end-to-end using Playwright. The test signs up, 
    E2E_BASE_URL=http://localhost:3001 pnpm test:e2e
    ```
 
-The `/test-otp-events` SSE endpoint and `/test-otp-latest` helper only respond when `NODE_ENV` is `development` or `test`; otherwise they return 401.
+The `/test-otp-events` SSE endpoint and `/test-otp-latest` helper only respond when `NODE_ENV` is `development` or `test`; otherwise they return 401. The passkey e2e tests are Chromium-only because Playwright's virtual authenticator support uses Chromium CDP APIs.
 
 ## Styling
 

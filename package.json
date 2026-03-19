@@ -6,7 +6,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --port 3100",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
