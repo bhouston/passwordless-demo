@@ -19,6 +19,7 @@ import {
 	markAttemptSuccessful,
 	RateLimitError,
 } from "./rateLimit";
+import { broadcastTestOtp } from "./testOtpSse";
 
 // Zod schemas for validation
 const signupSchema = z.object({
@@ -120,15 +121,13 @@ export const requestSignupOTP = createServerFn({ method: "POST" })
 		// Mark attempt as successful
 		await markAttemptSuccessful(tokenHash, "signup-otp");
 
-		// Log the code to console (instead of sending email)
-		const env = getEnvConfig();
-		if (env.NODE_ENV === "development") {
-			console.log("\n=== Signup OTP Code ===");
-			console.log(`Name: ${data.name}`);
-			console.log(`Email: ${data.email}`);
-			console.log(`Code: ${code}`);
-			console.log("=======================\n");
-		}
+		// Console log + SSE broadcast (development/test only)
+		broadcastTestOtp({
+			type: "signup-otp",
+			email: data.email,
+			code,
+			name: data.name,
+		});
 
 		return { success: true, token };
 	});
@@ -317,13 +316,12 @@ export const requestLoginCode = createServerFn({ method: "POST" })
 		await markAttemptSuccessful(tokenHash, "login-code");
 
 		if (user) {
-			// User exists - log the code to console (instead of sending email)
-			if (env.NODE_ENV === "development") {
-				console.log("\n=== Login Code ===");
-				console.log(`Email: ${user.email}`);
-				console.log(`Code: ${code}`);
-				console.log("==================\n");
-			}
+			// Console log + SSE broadcast (development/test only)
+			broadcastTestOtp({
+				type: "login-otp",
+				email: user.email,
+				code,
+			});
 		} else {
 			// User doesn't exist - mark attempt as bad-email
 			await markAttemptAsBadEmail(

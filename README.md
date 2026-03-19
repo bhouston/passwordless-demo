@@ -31,6 +31,30 @@ This project uses [Vitest](https://vitest.dev/) for testing. You can run the tes
 pnpm test
 ```
 
+### E2E (Playwright)
+
+The auth OTP flow can be tested end-to-end using Playwright. The test signs up, logs out, and logs back in via email code, using the test-only OTP endpoints to retrieve codes.
+
+1. **Bootstrap the test database** (once, or when you need a clean DB):
+
+   ```bash
+   pnpm test:e2e-bootstrap
+   ```
+
+2. **Start the app with test env** (use the port shown by the bootstrap script, e.g. 3001):
+
+   ```bash
+   DATABASE_URL=./db.test.sqlite NODE_ENV=test SITE_URL=http://localhost:3001 pnpm dev --port 3001
+   ```
+
+3. **Run the e2e tests** (in another terminal; set `E2E_BASE_URL` to the same port as the running server):
+
+   ```bash
+   E2E_BASE_URL=http://localhost:3001 pnpm test:e2e
+   ```
+
+The `/test-otp-events` SSE endpoint and `/test-otp-latest` helper only respond when `NODE_ENV` is `development` or `test`; otherwise they return 401.
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.

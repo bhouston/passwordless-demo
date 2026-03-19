@@ -53,21 +53,15 @@ function SignupPage() {
 		toastSuccess: false, // Don't show toast since we're navigating
 		mutationFn: async (variables: { name: string; email: string }) => {
 			const result = await requestSignupOTPFn({ data: variables });
-			console.log("Signup mutation result:", result);
 			return result;
 		},
 		onSuccess: async (result) => {
-			console.log("Signup onSuccess called with:", result);
-			// Navigate to OTP verification page with token
 			const token = result?.token;
 			if (!token) {
-				console.error("No token found in result:", result);
 				setFormError("Failed to get verification token. Please try again.");
 				return;
 			}
-			
 			try {
-				console.log("Navigating to signup token page with token:", token);
 				await navigate({
 					to: "/signup/$signupToken",
 					params: { signupToken: token },
@@ -76,9 +70,6 @@ function SignupPage() {
 				console.error("Navigation error:", error);
 				setFormError("Failed to navigate to verification page. Please try again.");
 			}
-		},
-		onError: (error) => {
-			console.error("Signup mutation error:", error);
 		},
 		setFormError,
 	});
