@@ -18,13 +18,13 @@ pnpm setup-db
 
 `setup-db` creates a `.env` file and SQLite database. Required variables (validated at runtime) are:
 
-| Variable | Purpose |
-| -------- | ------- |
-| `JWT_SECRET` | At least 32 characters; encrypts the TanStack Start session cookie and signs short-lived OTP/passkey flow tokens |
-| `SITE_URL` | Public site URL / origin (e.g. `http://localhost:3100` for local dev) |
-| `SITE_NAME` | Display name for WebAuthn (`RP_NAME`) |
-| `RP_ID` | WebAuthn relying party id (often the hostname from `SITE_URL`) |
-| `DATABASE_URL` | SQLite path, e.g. `./db.sqlite` |
+| Variable       | Purpose                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `JWT_SECRET`   | At least 32 characters; encrypts the TanStack Start session cookie and signs short-lived OTP/passkey flow tokens |
+| `SITE_URL`     | Public site URL / origin (e.g. `http://localhost:3100` for local dev)                                            |
+| `SITE_NAME`    | Display name for WebAuthn (`RP_NAME`)                                                                            |
+| `RP_ID`        | WebAuthn relying party id (often the hostname from `SITE_URL`)                                                   |
+| `DATABASE_URL` | SQLite path, e.g. `./db.sqlite`                                                                                  |
 
 Optional: `NODE_ENV` (`development` \| `production` \| `test`).
 
@@ -42,12 +42,17 @@ The dev server listens on port **3100** by default. Set `SITE_URL` in `.env` to 
 - **OTP and passkey handshakes:** Short-lived signed JWTs ([jose](https://github.com/panva/jose)) for verification tokens and WebAuthn challenges—not the same as the login session cookie.
 - **Route protection:** Authed pages sit under a pathless `_authed` layout; unauthenticated access redirects to `/login` with a `redirectTo` search param. The home page `/` redirects to `/user-settings` when you already have a session.
 
-## Building For Production
-
-To build this application for production:
+## Development
 
 ```bash
+pnpm install
+pnpm dev
+pnpm tsc # typescript-native
 pnpm build
+pnpm lint # oxlint
+pnpm lint:fix
+pnpm format # oxfmt
+pnpm test # vitest
 ```
 
 ## Testing
@@ -85,12 +90,11 @@ This project uses [Tailwind CSS](https://tailwindcss.com/) v4. Global colors and
 
 ## Linting & Formatting
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
+This project uses [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) for linting and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) for formatting. The following scripts are available:
 
 ```bash
 pnpm lint
 pnpm format
-pnpm check
 ```
 
 ## Built with
@@ -101,7 +105,7 @@ pnpm check
 - [TanStack Form](https://tanstack.com/form) (forms)
 - [Drizzle ORM](https://orm.drizzle.team/) + SQLite
 - [SimpleWebAuthn](https://simplewebauthn.dev/) for WebAuthn
-- [jose](https://github.com/panva/jose) for signed JWTs used in OTP/passkey *flow* tokens
+- [jose](https://github.com/panva/jose) for signed JWTs used in OTP/passkey _flow_ tokens
 - [Zod](https://zod.dev/) for validation
 
 Route files live under `src/routes`. Shared UI is under `src/components`. For framework docs, see the [TanStack documentation](https://tanstack.com).
