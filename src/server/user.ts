@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { passkeys, users } from "@/db/schema";
+import type { SessionUser } from "@/lib/sessionTypes";
+import { getSessionUserId } from "./appSession";
 import { requireUser } from "./middleware";
 
 const updateUserNameSchema = z.object({
@@ -72,6 +74,49 @@ export const updateUserName = createServerFn({ method: "POST" })
 			user: updatedUser,
 		};
 	});
+
+/**
+ * Optional session: reads auth cookie and returns user + passkey flag, or null when unauthenticated.
+ * Used by root beforeLoad (TanStack Start pattern); does not throw.
+ */
+export const getSessionUserOptional = createServerFn({ method: "GET" }).handler(
+	async (): Promise<{
+		sessionUser: SessionUser | null;
+		hasPasskey: boolean;
+	}> => {
+		const userId = await getSessionUserId();
+		if (userId === undefined) {
+			return { sessionUser: null, hasPasskey: false };
+		}
+
+		const [user] = await db
+			.select()
+			.from(users)
+			.where(eq(users.id, userId))
+			.limit(1);
+
+		if (!user) {
+			return { sessionUser: null, hasPasskey: false };
+		}
+
+		const userPasskey = await db
+			.select()
+			.from(passkeys)
+			.where(eq(passkeys.userId, user.id))
+			.limit(1);
+
+		const sessionUser: SessionUser = {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+		};
+
+		return {
+			sessionUser,
+			hasPasskey: userPasskey.length > 0,
+		};
+	},
+);
 
 /**
  * Server function to get user with passkey status

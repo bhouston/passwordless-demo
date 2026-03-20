@@ -95,7 +95,9 @@ test.describe("Auth passkey flow", () => {
 		await page.goto(`${BASE_URL}/login-passkey?redirectTo=%2Fuser-settings`);
 
 		await expect(
-			page.getByText(/No passkey found\. Please use email link to log in\./i),
+			page.getByText(
+				/No passkey found\. Please login with an email code instead\./i,
+			),
 		).toBeVisible();
 	});
 

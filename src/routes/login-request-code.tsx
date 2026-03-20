@@ -3,6 +3,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -12,8 +13,8 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useToastMutation } from "@/hooks/useToastMutation";
+import { showLastOtpToast } from "@/lib/demoOtpToast";
 import { redirectToSchema } from "@/lib/schemas";
 import { requestLoginCode } from "@/server/auth";
 
@@ -42,6 +43,7 @@ function LoginRequestCodePage() {
 		onSuccess: async (result) => {
 			// Always redirect to code entry page (token always returned to prevent enumeration)
 			if (result.token) {
+				await showLastOtpToast("login-otp");
 				await router.navigate({
 					to: "/login-via-code/$codeVerificationToken",
 					params: { codeVerificationToken: result.token },
@@ -120,9 +122,9 @@ function LoginRequestCodePage() {
 
 					{formError && <FieldError>{formError}</FieldError>}
 
-					<div className="text-center text-sm">
+					<div className="text-center text-sm text-muted-foreground">
 						<Link
-							className="text-blue-400 hover:text-blue-300"
+							className="font-medium text-foreground underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground"
 							search={redirectTo ? { redirectTo } : undefined}
 							to="/login"
 						>

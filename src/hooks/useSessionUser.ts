@@ -1,12 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import type { SessionUser } from "@/lib/sessionTypes";
 import { getUserWithPasskey } from "@/server/user";
-
-type SessionUser = {
-	id: number;
-	name: string;
-	email: string;
-};
 
 type UseSessionUserProps = {
 	required?: boolean;

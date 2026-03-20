@@ -12,8 +12,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { passkeys } from "@/db/schema";
-import { setAuthCookie } from "@/lib/auth";
+import { passkeys, users } from "@/db/schema";
+import { setSessionUserId } from "./appSession";
 import { getEnvConfig } from "./env";
 import {
 	signPasskeyChallengeToken,
@@ -23,6 +23,7 @@ import {
 } from "./jwt";
 import { requireUser } from "./middleware";
 import {
+	checkEmailRateLimit,
 	checkIPRateLimit,
 	hashJWT,
 	markAttemptSuccessful,
@@ -202,27 +203,149 @@ export const verifyRegistrationResponse = createServerFn({ method: "POST" })
  * Server function to initiate passkey discovery (no email/userId required)
  * Uses WebAuthn discovery flow where user selects their passkey
  */
-export const initiatePasskeyDiscovery = createServerFn({ method: "POST" })
-	.handler(async () => {
+export const initiatePasskeyDiscovery = createServerFn({
+	method: "POST",
+}).handler(async () => {
+	const env = getEnvConfig();
+	const opts: GenerateAuthenticationOptionsOpts = {
+		rpID: env.RP_ID,
+		timeout: 60000, // 60 seconds
+		// No allowCredentials array = discovery mode
+		userVerification: "required",
+	};
+
+	const options = await swaGenerateAuthenticationOptions(opts);
+
+	// Create discovery token (challenge only, no userId)
+	const token = await signPasskeyDiscoveryToken(options.challenge);
+
+	// Hash token for rate limiting
+	const tokenHash = hashJWT(token);
+
+	try {
+		// Check rate limits (IP only, no email)
+		await checkIPRateLimit("passkey-attempt", tokenHash);
+	} catch (error) {
+		if (error instanceof RateLimitError) {
+			return {
+				success: false,
+				error: error.message,
+			};
+		}
+		throw error;
+	}
+
+	return {
+		success: true,
+		options,
+		token,
+	};
+});
+
+const initiatePasskeyAuthForEmailSchema = z.object({
+	email: z.string().email("Please enter a valid email address"),
+});
+
+/**
+ * Account-first passkey login: look up the user's credential by email, then return
+ * authentication options scoped to that passkey (allowCredentials).
+ */
+export const initiatePasskeyAuthenticationForEmail = createServerFn({
+	method: "POST",
+})
+	.inputValidator((data: unknown) =>
+		initiatePasskeyAuthForEmailSchema.parse(data),
+	)
+	.handler(async ({ data }) => {
+		const email = data.email.trim();
+
+		const [user] = await db
+			.select()
+			.from(users)
+			.where(eq(users.email, email))
+			.limit(1);
+
+		if (!user) {
+			try {
+				await checkIPRateLimit("passkey-attempt");
+				await checkEmailRateLimit(email, "passkey-attempt");
+			} catch (error) {
+				if (error instanceof RateLimitError) {
+					return { success: false, error: error.message };
+				}
+				throw error;
+			}
+			return {
+				success: false,
+				error: "No account exists for that email.",
+			};
+		}
+
+		const [passkeyRow] = await db
+			.select()
+			.from(passkeys)
+			.where(eq(passkeys.userId, user.id))
+			.limit(1);
+
+		if (!passkeyRow) {
+			try {
+				await checkIPRateLimit("passkey-attempt");
+				await checkEmailRateLimit(email, "passkey-attempt");
+			} catch (error) {
+				if (error instanceof RateLimitError) {
+					return { success: false, error: error.message };
+				}
+				throw error;
+			}
+			return {
+				success: false,
+				error:
+					"This account does not have a passkey yet. Login with an email code and add a passkey in settings.",
+			};
+		}
+
 		const env = getEnvConfig();
+
+		type AllowCred = NonNullable<
+			GenerateAuthenticationOptionsOpts["allowCredentials"]
+		>[number];
+		let transports: AllowCred["transports"];
+
+		if (passkeyRow.transports) {
+			try {
+				transports = JSON.parse(
+					passkeyRow.transports,
+				) as AllowCred["transports"];
+			} catch {
+				transports = undefined;
+			}
+		} else {
+			transports = undefined;
+		}
+
 		const opts: GenerateAuthenticationOptionsOpts = {
 			rpID: env.RP_ID,
-			timeout: 60000, // 60 seconds
-			// No allowCredentials array = discovery mode
+			timeout: 60000,
+			allowCredentials: [
+				{
+					id: passkeyRow.credentialId,
+					transports,
+				},
+			],
 			userVerification: "required",
 		};
 
 		const options = await swaGenerateAuthenticationOptions(opts);
-
-		// Create discovery token (challenge only, no userId)
-		const token = await signPasskeyDiscoveryToken(options.challenge);
-
-		// Hash token for rate limiting
+		const token = await signPasskeyChallengeToken(
+			options.challenge,
+			user.id,
+			user.email,
+		);
 		const tokenHash = hashJWT(token);
 
 		try {
-			// Check rate limits (IP only, no email)
 			await checkIPRateLimit("passkey-attempt", tokenHash);
+			await checkEmailRateLimit(email, "passkey-attempt", tokenHash);
 		} catch (error) {
 			if (error instanceof RateLimitError) {
 				return {
@@ -272,7 +395,7 @@ export const verifyAuthenticationResponse = createServerFn({ method: "POST" })
 				userId = tokenPayload.userId;
 			}
 
-			let passkey;
+			let passkey: typeof passkeys.$inferSelect;
 			if (isDiscovery) {
 				// Discovery mode: extract credentialId from response and look up user
 				const response = data.response as any;
@@ -380,7 +503,7 @@ export const verifyAuthenticationResponse = createServerFn({ method: "POST" })
 				};
 			}
 
-			await setAuthCookie(userId);
+			await setSessionUserId(userId);
 
 			return { success: true };
 		} catch (error) {

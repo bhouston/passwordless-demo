@@ -1,21 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
-import {
-	createFileRoute,
-	Link,
-	useNavigate,
-	useRouter,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import { useToastMutation } from "@/hooks/useToastMutation";
+import { Button } from "@/components/ui/button";
 import { useSessionUser } from "@/hooks/useSessionUser";
+import { useToastMutation } from "@/hooks/useToastMutation";
+import { redirectToSchema } from "@/lib/schemas";
 import {
 	isWebAuthnSupported,
 	startPasskeyAuthentication,
 } from "@/lib/webauthnClient";
-import { redirectToSchema } from "@/lib/schemas";
 import {
 	initiatePasskeyDiscovery,
 	verifyAuthenticationResponse,
@@ -28,9 +22,7 @@ export const Route = createFileRoute("/login-passkey")({
 
 function LoginPasskeyPage() {
 	const { redirectTo = "/" } = Route.useSearch();
-	const router = useRouter();
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
 	const { sessionUser } = useSessionUser();
 	const generateAuthOptions = useServerFn(initiatePasskeyDiscovery);
 	const verifyAuthResponseFn = useServerFn(verifyAuthenticationResponse);
@@ -49,7 +41,9 @@ function LoginPasskeyPage() {
 				const result = await generateAuthOptions({});
 
 				if (!result.success || !result.options || !result.token) {
-					throw new Error(result.error || "Failed to generate authentication options");
+					throw new Error(
+						result.error || "Failed to generate authentication options",
+					);
 				}
 
 				// Start WebAuthn authentication
@@ -80,7 +74,9 @@ function LoginPasskeyPage() {
 						);
 					}
 					if (err.name === "InvalidStateError") {
-						throw new Error("No passkey found. Please use email link to log in.");
+						throw new Error(
+							"No passkey found. Please login with an email code instead.",
+						);
 					}
 					if (err.name === "NotSupportedError") {
 						throw new Error(
@@ -100,13 +96,7 @@ function LoginPasskeyPage() {
 			}
 		},
 		onSuccess: async () => {
-			// Success - session is updated by server function
-			await queryClient.invalidateQueries();
-			await router.invalidate();
-			await navigate({
-				to: redirectTo,
-				reloadDocument: true,
-			});
+			await navigate({ to: redirectTo });
 		},
 		onError: (err) => {
 			setIsAuthenticating(false);
@@ -153,9 +143,9 @@ function LoginPasskeyPage() {
 		return (
 			<AuthLayout title="Passkey Not Supported">
 				<div className="space-y-4">
-					<p className="text-center text-gray-400">
-						Passkeys are not supported in this browser. Please use a modern browser
-						or sign in with email link.
+					<p className="text-center text-muted-foreground">
+						Passkeys are not supported in this browser. Please use a modern
+						browser or login with an email code.
 					</p>
 					<div className="flex flex-col gap-2">
 						<Button asChild={true} className="w-full">
@@ -174,7 +164,7 @@ function LoginPasskeyPage() {
 		return (
 			<AuthLayout title="Passkey Login Failed">
 				<div className="space-y-4">
-					<p className="text-center text-gray-400">{error}</p>
+					<p className="text-center text-muted-foreground">{error}</p>
 					<div className="flex flex-col gap-2">
 						<Button asChild={true} className="w-full" variant="outline">
 							<Link search={{ redirectTo }} to="/login">
@@ -189,11 +179,11 @@ function LoginPasskeyPage() {
 
 	// Show loading state
 	return (
-		<AuthLayout title="Signing In...">
+		<AuthLayout title="Completing login...">
 			<div className="space-y-4">
-				<p className="text-center text-gray-400">
+				<p className="text-center text-muted-foreground">
 					{isAuthenticating
-						? "Please use your passkey to sign in..."
+						? "Please use your passkey to complete login..."
 						: "Preparing passkey authentication..."}
 				</p>
 			</div>

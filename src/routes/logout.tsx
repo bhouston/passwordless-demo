@@ -1,23 +1,22 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import { useToastMutation } from "@/hooks/useToastMutation";
+import { Button } from "@/components/ui/button";
 import { useSessionUser } from "@/hooks/useSessionUser";
+import { useToastMutation } from "@/hooks/useToastMutation";
 import { logout } from "@/server/auth";
+import { getUserWithPasskey } from "@/server/user";
 
 export const Route = createFileRoute("/logout")({
-	beforeLoad: async () => {
-		// Check if user is logged in by trying to get session
-		// If not logged in, redirect to login
+	beforeLoad: async ({ location }) => {
 		try {
-			const { getUserWithPasskey } = await import("@/server/user");
 			await getUserWithPasskey({});
 		} catch {
-			// User is not authenticated, redirect to login
+			const redirectTo = `${location.pathname}${location.search}`;
 			throw redirect({
 				to: "/login",
+				search: { redirectTo },
 			});
 		}
 	},
@@ -37,14 +36,8 @@ function LogoutPage() {
 			await logoutFn({});
 		},
 		onSuccess: async () => {
-			// Clear all queries and invalidate router
 			await queryClient.clear();
-			await router.invalidate();
-			// Redirect to login page
-			await router.navigate({
-				to: "/login",
-				reloadDocument: true,
-			});
+			await router.navigate({ to: "/login" });
 		},
 	});
 
@@ -52,9 +45,9 @@ function LogoutPage() {
 		<AuthLayout title="Logout">
 			<div className="space-y-4">
 				{sessionUser && (
-					<p className="text-center text-gray-400">
+					<p className="text-center text-muted-foreground">
 						You are currently logged in as{" "}
-						<span className="font-semibold text-white">
+						<span className="font-semibold text-foreground">
 							{sessionUser.name || sessionUser.email}
 						</span>
 					</p>

@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
@@ -52,7 +52,6 @@ function LoginViaCodePage() {
 	const { tokenValid, error } = Route.useLoaderData();
 	const { codeVerificationToken } = Route.useParams();
 	const { redirectTo = "/" } = Route.useSearch();
-	const router = useRouter();
 	const navigate = useNavigate();
 	const [formError, setFormError] = useState<string>();
 	const verifyCodeFn = useServerFn(verifyLoginCodeAndAuthenticate);
@@ -69,12 +68,7 @@ function LoginViaCodePage() {
 			return result;
 		},
 		onSuccess: async () => {
-			// Success - session is updated by server function
-			await router.invalidate();
-			await navigate({
-				to: redirectTo,
-				reloadDocument: true,
-			});
+			await navigate({ to: redirectTo });
 		},
 		setFormError,
 	});

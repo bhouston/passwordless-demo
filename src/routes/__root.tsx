@@ -1,12 +1,16 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import {
+	createRootRouteWithContext,
+	HeadContent,
+	Scripts,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
-
-import appCss from "../styles.css?url";
 import { Header } from "@/components/layout/Header";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { Toaster } from "@/components/ui/sonner";
+import type { RouterContext } from "@/lib/sessionTypes";
+import { getSessionUserOptional } from "@/server/user";
+import appCss from "../styles.css?url";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,7 +22,11 @@ const queryClient = new QueryClient({
 	},
 });
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
+	beforeLoad: async () => {
+		const { sessionUser, hasPasskey } = await getSessionUserOptional();
+		return { sessionUser, hasPasskey };
+	},
 	head: () => ({
 		meta: [
 			{
@@ -29,7 +37,7 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Passwordless user accounts demo",
 			},
 		],
 		links: [
@@ -59,24 +67,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<HeadContent />
 				</head>
 				<body
+					className="flex min-h-dvh flex-col"
 					data-hydrated="false"
 					data-node-env={process.env.NODE_ENV ?? "development"}
 				>
 					<HydrationMarker />
 					<Header />
-					{children}
-					<TanStackDevtools
-						config={{
-							position: "bottom-right",
-						}}
-						plugins={[
-							{
-								name: "Tanstack Router",
-								render: <TanStackRouterDevtoolsPanel />,
-							},
-						]}
-					/>
-					<ReactQueryDevtools initialIsOpen={false} />
+					<main className="flex min-h-0 w-full flex-1 flex-col">
+						{children}
+					</main>
+					<SiteFooter />
+					<Toaster />
 					<Scripts />
 				</body>
 			</html>

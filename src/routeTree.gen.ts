@@ -9,23 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UserSettingsRouteImport } from './routes/user-settings'
 import { Route as TestOtpLatestRouteImport } from './routes/test-otp-latest'
 import { Route as TestOtpEventsRouteImport } from './routes/test-otp-events'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRequestCodeRouteImport } from './routes/login-request-code'
 import { Route as LoginPasskeyRouteImport } from './routes/login-passkey'
+import { Route as LoginAccountPasskeyRouteImport } from './routes/login-account-passkey'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupSignupTokenRouteImport } from './routes/signup.$signupToken'
 import { Route as LoginViaCodeCodeVerificationTokenRouteImport } from './routes/login-via-code.$codeVerificationToken'
+import { Route as AuthedUserSettingsRouteImport } from './routes/_authed/user-settings'
 
-const UserSettingsRoute = UserSettingsRouteImport.update({
-  id: '/user-settings',
-  path: '/user-settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TestOtpLatestRoute = TestOtpLatestRouteImport.update({
   id: '/test-otp-latest',
   path: '/test-otp-latest',
@@ -56,9 +53,18 @@ const LoginPasskeyRoute = LoginPasskeyRouteImport.update({
   path: '/login-passkey',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginAccountPasskeyRoute = LoginAccountPasskeyRouteImport.update({
+  id: '/login-account-passkey',
+  path: '/login-account-passkey',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -77,44 +83,53 @@ const LoginViaCodeCodeVerificationTokenRoute =
     path: '/login-via-code/$codeVerificationToken',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthedUserSettingsRoute = AuthedUserSettingsRouteImport.update({
+  id: '/user-settings',
+  path: '/user-settings',
+  getParentRoute: () => AuthedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/login-account-passkey': typeof LoginAccountPasskeyRoute
   '/login-passkey': typeof LoginPasskeyRoute
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
   '/test-otp-events': typeof TestOtpEventsRoute
   '/test-otp-latest': typeof TestOtpLatestRoute
-  '/user-settings': typeof UserSettingsRoute
+  '/user-settings': typeof AuthedUserSettingsRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/login-account-passkey': typeof LoginAccountPasskeyRoute
   '/login-passkey': typeof LoginPasskeyRoute
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
   '/test-otp-events': typeof TestOtpEventsRoute
   '/test-otp-latest': typeof TestOtpLatestRoute
-  '/user-settings': typeof UserSettingsRoute
+  '/user-settings': typeof AuthedUserSettingsRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
+  '/login-account-passkey': typeof LoginAccountPasskeyRoute
   '/login-passkey': typeof LoginPasskeyRoute
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
   '/test-otp-events': typeof TestOtpEventsRoute
   '/test-otp-latest': typeof TestOtpLatestRoute
-  '/user-settings': typeof UserSettingsRoute
+  '/_authed/user-settings': typeof AuthedUserSettingsRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
@@ -123,6 +138,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/login-account-passkey'
     | '/login-passkey'
     | '/login-request-code'
     | '/logout'
@@ -136,6 +152,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/login-account-passkey'
     | '/login-passkey'
     | '/login-request-code'
     | '/logout'
@@ -148,40 +165,36 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authed'
     | '/login'
+    | '/login-account-passkey'
     | '/login-passkey'
     | '/login-request-code'
     | '/logout'
     | '/signup'
     | '/test-otp-events'
     | '/test-otp-latest'
-    | '/user-settings'
+    | '/_authed/user-settings'
     | '/login-via-code/$codeVerificationToken'
     | '/signup/$signupToken'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  LoginAccountPasskeyRoute: typeof LoginAccountPasskeyRoute
   LoginPasskeyRoute: typeof LoginPasskeyRoute
   LoginRequestCodeRoute: typeof LoginRequestCodeRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRouteWithChildren
   TestOtpEventsRoute: typeof TestOtpEventsRoute
   TestOtpLatestRoute: typeof TestOtpLatestRoute
-  UserSettingsRoute: typeof UserSettingsRoute
   LoginViaCodeCodeVerificationTokenRoute: typeof LoginViaCodeCodeVerificationTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/user-settings': {
-      id: '/user-settings'
-      path: '/user-settings'
-      fullPath: '/user-settings'
-      preLoaderRoute: typeof UserSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/test-otp-latest': {
       id: '/test-otp-latest'
       path: '/test-otp-latest'
@@ -224,11 +237,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginPasskeyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login-account-passkey': {
+      id: '/login-account-passkey'
+      path: '/login-account-passkey'
+      fullPath: '/login-account-passkey'
+      preLoaderRoute: typeof LoginAccountPasskeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -252,8 +279,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginViaCodeCodeVerificationTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/user-settings': {
+      id: '/_authed/user-settings'
+      path: '/user-settings'
+      fullPath: '/user-settings'
+      preLoaderRoute: typeof AuthedUserSettingsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
+
+interface AuthedRouteChildren {
+  AuthedUserSettingsRoute: typeof AuthedUserSettingsRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedUserSettingsRoute: AuthedUserSettingsRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
 
 interface SignupRouteChildren {
   SignupSignupTokenRoute: typeof SignupSignupTokenRoute
@@ -268,14 +313,15 @@ const SignupRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  LoginAccountPasskeyRoute: LoginAccountPasskeyRoute,
   LoginPasskeyRoute: LoginPasskeyRoute,
   LoginRequestCodeRoute: LoginRequestCodeRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRouteWithChildren,
   TestOtpEventsRoute: TestOtpEventsRoute,
   TestOtpLatestRoute: TestOtpLatestRoute,
-  UserSettingsRoute: UserSettingsRoute,
   LoginViaCodeCodeVerificationTokenRoute:
     LoginViaCodeCodeVerificationTokenRoute,
 }

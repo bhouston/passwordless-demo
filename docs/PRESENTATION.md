@@ -2,13 +2,11 @@
 
 ## Introduction
 
-### 1.1 The Tech Stack
-- **Framework**: TanStack Start (React + Server Functions)
-- **Routing**: TanStack Router (Type-safe file-based routing)
-- **Database**: Drizzle ORM + SQLite
-- **Auth Standards**: JWT (OTP Codes) & WebAuthn (Passkeys)
+### 1.1 What this demo is
+- **Purpose**: A live **passwordless user accounts** demo—**passkeys (WebAuthn)** for primary login, **email OTP** as backup, with flows designed to avoid obvious account enumeration where implemented.
+- **Stack (implementation detail)**: React app with type-safe routes and server functions, Drizzle + SQLite, JWT-backed verification for OTP links, SimpleWebAuthn for passkeys.
 
-> **Speaker Note:** "This isn't just a conceptual talk; this is a working demo built on a modern stack. I'm using TanStack Start because it lets me write my backend logic—my 'Server Functions'—right alongside my UI code. It's perfect for authentication flows where the handshake between client and server needs to be tight and type-safe."
+> **Speaker Note:** "This isn't a slideware-only story—you can try the real app. The headline is passwordless auth: passkeys plus email codes as a fallback. Under the hood I'm using a modern full-stack React setup so the client and server parts of WebAuthn and OTP stay in sync and type-checked."
 
 ### 1.2 Passwords are a security nightmare
 - **Problem**: Users reuse passwords across multiple sites.
@@ -93,7 +91,7 @@ const token = await signCodeVerificationToken(user.id, user.email, attempt.id);
 
 > **Speaker Note:** "We use JWTs here not for sessions, but as a one-time-use entry ticket. The code itself is stored securely in the database, hashed with SHA-256. The JWT only contains a reference to the attempt, ensuring that even if the token is decoded, the code remains secret."
 
-- **Route Handler (TanStack Router)**:
+- **Route guard**:
 We use `beforeLoad` to verify the token *before* the component renders. This ensures we don't flash authorized UI to unauthorized users.
 
 ```typescript:src/routes/login-via-code.$codeVerificationToken.tsx
@@ -211,7 +209,7 @@ export async function verifyRegistrationResponse(...) {
 2. **Email Login (Always Succeeds)**:
    - The request always returns success, regardless of whether the account exists.
    - If account exists → Send 8-character OTP code email.
-   - If account doesn't exist → Send notification email explaining someone tried to log in and that email isn't registered.
+   - If account doesn't exist → Send notification email explaining someone tried to login and that email isn't registered.
    - **Why it's safe to say "account doesn't exist"**: The email goes to the owner of that email address. They already know whether they have an account, so revealing this information doesn't help attackers.
 
 > **Speaker Note:** "This is both simpler and more secure. Passkeys eliminate the enumeration attack vector entirely, and our email flow always succeeds - we just send different emails. The key insight is that when an account doesn't exist, we're telling the email owner something they already know, so there's no security risk."

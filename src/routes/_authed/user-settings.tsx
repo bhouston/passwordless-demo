@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
@@ -15,38 +15,23 @@ import {
 	FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { getUserWithPasskey, updateUserName } from "@/server/user";
+import { updateUserName } from "@/server/user";
 
-// Zod schema for form validation
 const userDetailsSchema = z.object({
 	name: z.string().min(3, "Name is required").max(100, "Name is too long"),
 });
 
 type UserDetailsFormData = z.infer<typeof userDetailsSchema>;
 
-export const Route = createFileRoute("/user-settings")({
-	loader: async () => {
-		try {
-			// Call server function directly - it can be invoked from loaders
-			// Server functions are called with an object, even if empty
-			const result = await getUserWithPasskey({});
-			return result;
-		} catch {
-			// If user is not authenticated, redirect to login
-			throw redirect({
-				to: "/login",
-			});
-		}
-	},
+export const Route = createFileRoute("/_authed/user-settings")({
 	component: UserSettingsPage,
 });
 
 function UserSettingsPage() {
-	const { user, hasPasskey } = Route.useLoaderData();
+	const { sessionUser, hasPasskey } = Route.useRouteContext();
 	const updateUserNameFn = useServerFn(updateUserName);
 	const [formError, setFormError] = useState<string>();
 
-	// Mutation for updating user name
 	const updateNameMutation = useMutation({
 		mutationFn: async (data: UserDetailsFormData) => {
 			const result = await updateUserNameFn({ data });
@@ -59,7 +44,7 @@ function UserSettingsPage() {
 
 	const form = useForm({
 		defaultValues: {
-			name: user.name,
+			name: sessionUser.name,
 		},
 		validators: {
 			onChange: userDetailsSchema,
@@ -67,7 +52,6 @@ function UserSettingsPage() {
 		onSubmit: async ({ value }) => {
 			try {
 				const result = await updateNameMutation.mutateAsync(value);
-				// Update form default values to reflect the saved state
 				form.setFieldValue("name", result.user.name);
 				setFormError(undefined);
 			} catch (error) {
@@ -81,23 +65,24 @@ function UserSettingsPage() {
 	});
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-			<div className="max-w-4xl mx-auto py-8">
+		<div className="w-full flex-1 min-h-0 bg-background p-4">
+			<div className="page-wrap max-w-4xl py-8">
 				<div className="mb-8">
-					<h1 className="text-4xl font-bold text-white mb-2">User Settings</h1>
-					<p className="text-gray-400">
+					<h1 className="mb-2 text-4xl font-bold text-foreground">
+						User Settings
+					</h1>
+					<p className="text-muted-foreground">
 						Manage your account settings and preferences
 					</p>
 				</div>
 
 				<div className="space-y-6">
-					{/* User Details Card */}
-					<div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+					<div className="border border-border bg-card p-6">
 						<div className="mb-6">
-							<h2 className="text-2xl font-semibold text-white mb-2">
+							<h2 className="mb-2 text-2xl font-semibold text-foreground">
 								User Details
 							</h2>
-							<p className="text-gray-400 text-sm">
+							<p className="text-sm text-muted-foreground">
 								Update your personal information
 							</p>
 						</div>
@@ -149,8 +134,8 @@ function UserSettingsPage() {
 										)}
 
 										{updateNameMutation.isSuccess && (
-											<div className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-												<p className="text-green-400 text-sm">
+											<div className="border border-green-200 bg-green-50 p-4">
+												<p className="text-sm text-green-800">
 													User details saved successfully!
 												</p>
 											</div>
@@ -176,12 +161,11 @@ function UserSettingsPage() {
 						</FieldSet>
 					</div>
 
-					{/* Passkey Management Card */}
 					<PasskeyComponent
-						userId={user.id}
+						userId={sessionUser.id}
 						hasPasskey={hasPasskey}
-						userName={user.email}
-						userDisplayName={user.name}
+						userName={sessionUser.email}
+						userDisplayName={sessionUser.name}
 					/>
 				</div>
 			</div>

@@ -120,7 +120,7 @@ function removeExistingFiles(projectRoot: string): void {
  */
 function createEnvFile(projectRoot: string): void {
 	const jwtSecret = generateJWTSecret();
-	const siteUrl = "http://localhost:3000";
+	const siteUrl = "http://localhost:3100";
 	const siteName = "Passwordless Demo";
 	const databaseUrl = "./db.sqlite";
 	const nodeEnv = "development";
@@ -296,7 +296,7 @@ async function main(): Promise<void> {
 	console.log("\nNext steps:");
 	console.log("  1. Review the .env file if you need to customize settings");
 	console.log("  2. Run 'pnpm dev' to start the development server");
-	console.log("  3. Visit http://localhost:3000 in your browser\n");
+	console.log("  3. Visit http://localhost:3100 in your browser\n");
 }
 
 // Run setup

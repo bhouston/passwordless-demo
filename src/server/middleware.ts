@@ -2,23 +2,18 @@ import { createMiddleware } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { getAuthCookie } from "@/lib/auth";
+import { getSessionUserId } from "./appSession";
 
 /**
  * Authentication middleware that ensures a user is logged in
- * Reads the authentication cookie, verifies the user exists in the database,
+ * Reads the app session, loads the user from the database,
  * and attaches the user object to context for use in server functions
  */
 export const requireUser = createMiddleware({ type: "function" }).server(
 	async ({ next }) => {
-		const userIdStr = await getAuthCookie();
-		if (!userIdStr) {
+		const userId = await getSessionUserId();
+		if (userId === undefined) {
 			throw new Error("Not authenticated");
-		}
-
-		const userId = parseInt(userIdStr, 10);
-		if (Number.isNaN(userId)) {
-			throw new Error("Invalid user ID");
 		}
 
 		const [user] = await db

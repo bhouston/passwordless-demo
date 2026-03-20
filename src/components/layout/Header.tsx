@@ -1,51 +1,55 @@
-import { Link } from "@tanstack/react-router";
-import { useSessionUser } from "@/hooks/useSessionUser";
+import { getRouteApi, Link } from "@tanstack/react-router";
+
+const rootRouteApi = getRouteApi("__root__");
 
 export function Header() {
-	const { sessionUser } = useSessionUser();
+	const { sessionUser } = rootRouteApi.useRouteContext();
 
 	return (
-		<header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700">
-			<nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex items-center justify-between h-16">
-					<div className="flex items-center">
-						<Link
-							to="/"
-							className="text-xl font-bold text-white hover:text-blue-400 transition-colors"
-						>
-							Passwordless Demo
-						</Link>
-					</div>
-					<div className="flex items-center gap-4">
-						<Link
-							to="/signup"
-							className="text-gray-300 hover:text-white transition-colors"
-						>
-							Sign Up
-						</Link>
-						<Link
-							to="/login"
-							className="text-gray-300 hover:text-white transition-colors"
-						>
-							Login
-						</Link>
-						{sessionUser && (
-							<>
-								<Link
-									to="/user-settings"
-									className="text-gray-300 hover:text-white transition-colors"
-								>
-									User Settings
-								</Link>
-								<Link
-									to="/logout"
-									className="text-gray-300 hover:text-white transition-colors"
-								>
-									Log Out
-								</Link>
-							</>
-						)}
-					</div>
+		<header className="border-b border-border bg-card">
+			<nav
+				className="page-wrap flex h-16 items-center justify-between py-0"
+				aria-label="Main"
+			>
+				<Link
+					to="/"
+					className="text-lg font-semibold text-foreground no-underline hover:text-foreground"
+				>
+					Passwordless Demo
+				</Link>
+				<div className="flex items-center gap-6 text-sm font-medium">
+					{!sessionUser && (
+						<>
+							<Link
+								to="/signup"
+								className="text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:text-foreground"
+							>
+								Sign Up
+							</Link>
+							<Link
+								to="/login"
+								className="text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:text-foreground"
+							>
+								Login
+							</Link>
+						</>
+					)}
+					{sessionUser && (
+						<>
+							<Link
+								to="/user-settings"
+								className="text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:text-foreground"
+							>
+								User Settings
+							</Link>
+							<Link
+								to="/logout"
+								className="text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:text-foreground"
+							>
+								Log Out
+							</Link>
+						</>
+					)}
 				</div>
 			</nav>
 		</header>

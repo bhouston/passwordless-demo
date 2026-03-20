@@ -1,7 +1,12 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { AuthLayout } from "@/components/layout/AuthLayout";
 import { redirectToSchema } from "@/lib/schemas";
 import { getUserWithPasskey } from "@/server/user";
 
@@ -48,10 +53,25 @@ function LoginPage() {
 						</Button>
 					</Field>
 
-					<div className="flex items-center gap-4 my-4">
-						<div className="flex-1 border-t border-slate-600"></div>
-						<span className="text-sm text-gray-400">or</span>
-						<div className="flex-1 border-t border-slate-600"></div>
+					<Field>
+						<Button
+							onClick={() => {
+								void navigate({
+									to: "/login-account-passkey",
+									search: { redirectTo },
+								});
+							}}
+							className="w-full"
+							variant="outline"
+						>
+							Login with Account + Passkey
+						</Button>
+					</Field>
+
+					<div className="my-4 flex items-center gap-4">
+						<div className="flex-1 border-t border-border" />
+						<span className="text-sm text-muted-foreground">or</span>
+						<div className="flex-1 border-t border-border" />
 					</div>
 
 					<Field>
@@ -70,10 +90,10 @@ function LoginPage() {
 					</Field>
 				</div>
 
-				<div className="text-center text-sm">
-					Don't have an account?{" "}
+				<div className="text-center text-sm text-muted-foreground">
+					Don&apos;t have an account?{" "}
 					<Link
-						className="text-blue-400 hover:text-blue-300"
+						className="font-medium text-foreground underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground"
 						search={{ redirectTo }}
 						to="/signup"
 					>

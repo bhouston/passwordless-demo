@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import {
 	createFileRoute,
+	Link,
 	Outlet,
 	redirect,
 	useNavigate,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useToastMutation } from "@/hooks/useToastMutation";
+import { showLastOtpToast } from "@/lib/demoOtpToast";
 import { requestSignupOTP } from "@/server/auth";
 import { getUserWithPasskey } from "@/server/user";
 
@@ -79,6 +81,7 @@ function SignupPage() {
 				setFormError("Failed to get verification token. Please try again.");
 				return;
 			}
+			await showLastOtpToast("signup-otp");
 			try {
 				await navigate({
 					to: "/signup/$signupToken",
@@ -86,7 +89,9 @@ function SignupPage() {
 				});
 			} catch (error) {
 				console.error("Navigation error:", error);
-				setFormError("Failed to navigate to verification page. Please try again.");
+				setFormError(
+					"Failed to navigate to verification page. Please try again.",
+				);
 			}
 		},
 		setFormError,
@@ -106,15 +111,15 @@ function SignupPage() {
 	});
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+		<div className="flex w-full flex-1 min-h-0 items-center justify-center bg-background p-4">
 			<div className="w-full max-w-md">
-				<FieldSet className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+				<FieldSet className="border border-border bg-card p-6">
 					<FieldGroup>
 						<div className="mb-4">
-							<h1 className="text-3xl font-bold text-white mb-2">
+							<h1 className="mb-2 text-3xl font-bold text-foreground">
 								Create Account
 							</h1>
-							<p className="text-gray-400">
+							<p className="text-muted-foreground">
 								Enter your information to get started
 							</p>
 						</div>
@@ -141,7 +146,9 @@ function SignupPage() {
 												placeholder="John Doe"
 											/>
 											{field.state.meta.errors.length > 0 && (
-												<FieldError>{field.state.meta.errors[0]?.message}</FieldError>
+												<FieldError>
+													{field.state.meta.errors[0]?.message}
+												</FieldError>
 											)}
 										</Field>
 									)}
@@ -165,7 +172,9 @@ function SignupPage() {
 												We'll send you a verification code to this email address
 											</FieldDescription>
 											{field.state.meta.errors.length > 0 && (
-												<FieldError>{field.state.meta.errors[0]?.message}</FieldError>
+												<FieldError>
+													{field.state.meta.errors[0]?.message}
+												</FieldError>
 											)}
 										</Field>
 									)}
@@ -176,12 +185,26 @@ function SignupPage() {
 								<Field>
 									<Button
 										type="submit"
-										disabled={form.state.isSubmitting || signupMutation.isPending}
+										disabled={
+											form.state.isSubmitting || signupMutation.isPending
+										}
 										className="w-full"
 									>
-										{form.state.isSubmitting || signupMutation.isPending ? "Sending Code..." : "Sign Up"}
+										{form.state.isSubmitting || signupMutation.isPending
+											? "Sending Code..."
+											: "Sign Up"}
 									</Button>
 								</Field>
+
+								<div className="text-center text-sm text-muted-foreground">
+									Already have an account?{" "}
+									<Link
+										className="font-medium text-foreground underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground"
+										to="/login"
+									>
+										Log in
+									</Link>
+								</div>
 							</FieldGroup>
 						</form>
 					</FieldGroup>

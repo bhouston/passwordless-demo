@@ -11,12 +11,12 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
 	subTitle,
 	children,
 }) => (
-	<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+	<div className="flex w-full flex-1 min-h-0 items-center justify-center bg-background p-4">
 		<div className="w-full max-w-md">
-			<div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-				<div className="text-center mb-6">
-					<h1 className="text-3xl font-bold text-white mb-2">{title}</h1>
-					{subTitle && <p className="text-gray-400">{subTitle}</p>}
+			<div className="border border-border bg-card p-6">
+				<div className="mb-6 text-center">
+					<h1 className="mb-2 text-3xl font-bold text-foreground">{title}</h1>
+					{subTitle && <p className="text-muted-foreground">{subTitle}</p>}
 				</div>
 				{children}
 			</div>

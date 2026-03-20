@@ -1,8 +1,10 @@
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
+import { InvalidLink } from "@/components/auth/InvalidLink";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import {
 	Field,
@@ -15,8 +17,6 @@ import {
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { InvalidLink } from "@/components/auth/InvalidLink";
-import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useToastMutation } from "@/hooks/useToastMutation";
 import { verifySignupOTPAndCreateUser } from "@/server/auth";
 import { validateCodeVerificationToken } from "@/server/jwt";
@@ -47,7 +47,6 @@ export const Route = createFileRoute("/signup/$signupToken")({
 function SignupPage() {
 	const { tokenValid, error } = Route.useLoaderData();
 	const { signupToken } = Route.useParams();
-	const router = useRouter();
 	const navigate = useNavigate();
 	const [formError, setFormError] = useState<string>();
 	const verifySignupFn = useServerFn(verifySignupOTPAndCreateUser);
@@ -64,12 +63,7 @@ function SignupPage() {
 			return result;
 		},
 		onSuccess: async () => {
-			// Success - session is updated by server function
-			await router.invalidate();
-			await navigate({
-				to: "/user-settings",
-				reloadDocument: true,
-			});
+			await navigate({ to: "/user-settings" });
 		},
 		setFormError,
 	});
@@ -80,7 +74,10 @@ function SignupPage() {
 		},
 		validators: {
 			onChange: z.object({
-				code: z.string().length(8, "Code must be 8 characters").regex(/^[A-Z0-9]{8}$/, "Code must be alphanumeric (A-Z, 0-9)"),
+				code: z
+					.string()
+					.length(8, "Code must be 8 characters")
+					.regex(/^[A-Z0-9]{8}$/, "Code must be alphanumeric (A-Z, 0-9)"),
 			}),
 		},
 		onSubmit: async ({ value }) => {
@@ -103,7 +100,7 @@ function SignupPage() {
 	return (
 		<AuthLayout title="Enter Verification Code">
 			<div className="mb-6 text-center">
-				<p className="text-gray-400">
+				<p className="text-muted-foreground">
 					Check your email for the 8-character verification code
 				</p>
 			</div>

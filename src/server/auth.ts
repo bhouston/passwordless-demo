@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { users, userAuthAttempts } from "@/db/schema";
-import { clearAuthCookie, setAuthCookie } from "@/lib/auth";
+import { clearAppSession, setSessionUserId } from "./appSession";
 import { getEnvConfig } from "./env";
 import {
 	signCodeVerificationToken,
@@ -237,8 +237,7 @@ export const verifySignupOTPAndCreateUser = createServerFn({
 				})
 				.returning();
 
-			// Set authentication cookie
-			await setAuthCookie(newUser.id);
+			await setSessionUserId(newUser.id);
 
 			return {
 				success: true,
@@ -456,8 +455,7 @@ export const verifyLoginCodeAndAuthenticate = createServerFn({
 				const tokenHash = hashJWT(data.token);
 				await markAttemptSuccessful(tokenHash, "login-code");
 
-				// Set authentication cookie
-				await setAuthCookie(attempt.userId);
+				await setSessionUserId(attempt.userId);
 
 				return {
 					success: true,
@@ -484,9 +482,9 @@ export const verifyLoginCodeAndAuthenticate = createServerFn({
 
 /**
  * Server function to logout the current user
- * Clears the authentication cookie
+ * Clears the app session
  */
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
-	clearAuthCookie();
+	await clearAppSession();
 	return { success: true };
 });

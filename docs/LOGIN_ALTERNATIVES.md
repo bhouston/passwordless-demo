@@ -5,7 +5,7 @@ As a security engineer, I have analyzed these six authentication methods focusin
 Here is the detailed comparison.
 
 ### 1. Passkey with User Discovery (Nameless Login)
-*User clicks "Sign in" -> Selects Passkey -> Logged in.*
+*User clicks "Login" -> Selects Passkey -> Logged in.*
 
 *   **Security:** **Excellent (Best)**
     *   **Phishing Resistant:** WebAuthn (the underlying standard) binds the credential to the specific domain. A user physically cannot use their passkey on a fake site (`fake-bank.com`).

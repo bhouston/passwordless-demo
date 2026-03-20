@@ -141,12 +141,12 @@ export function PasskeyComponent({
 		addPasskeyMutation.isPending || deletePasskeyMutation.isPending;
 
 	return (
-		<div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+		<div className="border border-border bg-card p-6">
 			<div className="mb-6">
-				<h2 className="text-2xl font-semibold text-white mb-2">
+				<h2 className="mb-2 text-2xl font-semibold text-foreground">
 					Passkey Management
 				</h2>
-				<p className="text-gray-400 text-sm">
+				<p className="text-sm text-muted-foreground">
 					Manage your passkey for secure, passwordless authentication
 				</p>
 			</div>
@@ -154,19 +154,18 @@ export function PasskeyComponent({
 			<FieldSet>
 				<FieldGroup>
 					<div className="mb-4">
-						<div className="p-4 bg-slate-700/50 rounded-lg">
-							<p className="text-sm text-gray-300">
+						<div className="border border-border bg-muted/50 p-4">
+							<p className="text-sm text-foreground">
 								<strong>Status:</strong>{" "}
 								{hasPasskey ? (
-									<span className="text-green-400">Passkey registered</span>
+									<span className="text-green-700">Passkey registered</span>
 								) : (
-									<span className="text-yellow-400">No passkey registered</span>
+									<span className="text-amber-800">No passkey registered</span>
 								)}
 							</p>
 							{hasPasskey && (
-								<p className="text-xs text-gray-400 mt-2">
-									You can use your passkey to log in securely without a
-									password.
+								<p className="mt-2 text-xs text-muted-foreground">
+									You can use your passkey to login securely without a password.
 								</p>
 							)}
 						</div>
@@ -175,8 +174,8 @@ export function PasskeyComponent({
 					{error && <FieldError className="mb-4">{error}</FieldError>}
 
 					{successMessage && (
-						<div className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg mb-4">
-							<p className="text-green-400 text-sm">{successMessage}</p>
+						<div className="mb-4 border border-green-200 bg-green-50 p-4">
+							<p className="text-sm text-green-800">{successMessage}</p>
 						</div>
 					)}
 
