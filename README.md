@@ -84,6 +84,39 @@ The auth OTP and passkey flows can be tested end-to-end using Playwright. The OT
 
 The `/test-otp-events` SSE endpoint and `/test-otp-latest` helper only respond when `NODE_ENV` is `development` or `test`; otherwise they return 401. The passkey e2e tests are Chromium-only because Playwright's virtual authenticator support uses Chromium CDP APIs.
 
+## Deployment (Docker / Cloud Run)
+
+The **Dockerfile** is set up for **passwordless-login.benhouston3d.com**: it initializes the SQLite schema and sets `SITE_URL`, `SITE_NAME`, `RP_ID`, and `DATABASE_URL`. The app listens on port **8080**.
+
+### What you should configure
+
+1. **HTTPS and hostname**  
+   The site must be served over **HTTPS** at **passwordless-login.benhouston3d.com** (WebAuthn requires a secure origin). Point your DNS and reverse proxy (or Cloud Run custom domain) at the service so the browser URL is exactly that. The app already uses `getRequestIP({ xForwardedFor: true })` for rate limiting behind a proxy.
+
+2. **JWT_SECRET (recommended)**  
+   The image has a default `JWT_SECRET`; if you don’t override it, every new container (or redeploy) will use a different secret and existing sessions will be invalidated. For stable logins across deploys, set `JWT_SECRET` at runtime (e.g. Cloud Run env or secret):
+   - Generate: `openssl rand -base64 32`
+   - In Cloud Run: set the env var (or use Secret Manager) in the deploy step.
+
+3. **Email OTP in production**  
+   This demo does **not** send real emails. OTP codes are only logged and broadcast via SSE in `development` / `test`. In **production**, the “request login/signup code” flow still creates and stores the code (no enumeration), but the user never receives it. **Passkey login works**; email OTP will not unless you add an email provider (e.g. Resend, SendGrid) and send the code in `src/server/auth.ts`.
+
+### Optional: pass JWT_SECRET in Cloud Run deploy
+
+In `.github/workflows/deploy.yml`, you can add env vars to the Cloud Run service so sessions survive redeploys, for example:
+
+```yaml
+- name: Deploy to Cloud Run
+  uses: google-github-actions/deploy-cloudrun@v2
+  with:
+    service: ${{ env.SERVICE }}
+    region: ${{ env.REGION }}
+    image: ${{ env.IMAGE_PATH }}
+    flags: '--allow-unauthenticated --set-env-vars=JWT_SECRET=${{ secrets.JWT_SECRET }}'
+```
+
+Store a 32+ character secret in a repo secret (e.g. `JWT_SECRET`) and use it as above (or use Secret Manager and `--set-secrets`).
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) v4. Global colors and layout tokens are aligned with a light, neutral “presentation site” palette (stone/off-white surfaces, sharp borders).
