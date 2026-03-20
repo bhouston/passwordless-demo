@@ -34,10 +34,10 @@ function LoginRequestCodePage() {
       const result = await requestLoginCodeFn({ data: variables });
       return result;
     },
-    onSuccess: async (result) => {
+    onSuccess: async (result, variables) => {
       // Always redirect to code entry page (token always returned to prevent enumeration)
       if (result.token) {
-        await showLastOtpToast('login-otp');
+        await showLastOtpToast('login-otp', variables.email);
         await router.navigate({
           to: '/login-via-code/$codeVerificationToken',
           params: { codeVerificationToken: result.token },

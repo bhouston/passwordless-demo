@@ -1,5 +1,3 @@
-import { getEnvConfig } from './env';
-
 export type TestOtpEventType = 'signup-otp' | 'login-otp';
 
 export interface BroadcastTestOtpPayload {
@@ -10,75 +8,27 @@ export interface BroadcastTestOtpPayload {
   token?: string;
 }
 
-const connections = new Map<string, ReadableStreamDefaultController<Uint8Array>>();
-
-/** Last emitted payloads (test only) so e2e can fetch OTP without relying on SSE timing. */
-const lastPayloads = new Map<
-  TestOtpEventType,
-  {
-    email: string;
-    code: string;
-    issuedAt: string;
-    name?: string;
-    token?: string;
-  }
->();
-
-function formatSseMessage(eventName: string, payload: unknown): Uint8Array {
-  const eventLine = `event: ${eventName}\n`;
-  const dataLine = `data: ${JSON.stringify(payload)}\n\n`;
-  return new TextEncoder().encode(eventLine + dataLine);
+export interface LastTestOtpPayload {
+  email: string;
+  code: string;
+  issuedAt: string;
+  name?: string;
+  token?: string;
 }
 
-function sendToConnection(
-  controller: ReadableStreamDefaultController<Uint8Array>,
-  eventName: string,
-  payload: unknown,
-): void {
-  try {
-    controller.enqueue(formatSseMessage(eventName, payload));
-  } catch {
-    // Stream already closed (e.g. client disconnected)
-  }
+/** Last emitted payloads per (type, email) so e2e and demo toast can fetch OTP by email. */
+const lastPayloads = new Map<string, LastTestOtpPayload>();
+
+function storageKey(type: TestOtpEventType, email: string): string {
+  return `${type}:${email.toLowerCase()}`;
 }
 
 /**
- * Register an SSE connection for receiving OTP events.
- * Call from the GET handler when opening the stream.
- */
-export function registerTestOtpConnection(
-  connectionId: string,
-  controller: ReadableStreamDefaultController<Uint8Array>,
-): void {
-  connections.set(connectionId, controller);
-}
-
-/**
- * Unregister an SSE connection (e.g. on abort).
- */
-export function unregisterTestOtpConnection(connectionId: string): void {
-  connections.delete(connectionId);
-}
-
-/**
- * Whether the SSE endpoint should be enabled (development or test only).
- */
-export function isTestOtpSseEnabled(): boolean {
-  const env = getEnvConfig();
-  return env.NODE_ENV === 'development' || env.NODE_ENV === 'test';
-}
-
-/**
- * Log OTP to console and broadcast to connected SSE clients.
- * Only runs when NODE_ENV is "development" or "test".
+ * Log OTP to console and store per (type, email).
+ * Runs in all environments so demo toast works in production.
  * Use for signup and login code issuance in auth.ts.
  */
 export function broadcastTestOtp(payload: BroadcastTestOtpPayload): void {
-  const env = getEnvConfig();
-  if (env.NODE_ENV !== 'development' && env.NODE_ENV !== 'test') {
-    return;
-  }
-
   const { type, email, code, name, token } = payload;
   const issuedAt = new Date().toISOString();
 
@@ -96,46 +46,19 @@ export function broadcastTestOtp(payload: BroadcastTestOtpPayload): void {
     console.log('==================\n');
   }
 
-  // Store for test retrieval (same shape as SSE payload)
-  lastPayloads.set(type, {
+  // Store for retrieval by (type, email)
+  lastPayloads.set(storageKey(type, email), {
     email,
     code,
     issuedAt,
     ...(name && { name }),
     ...(token && { token }),
   });
-
-  // SSE broadcast
-  const ssePayload = {
-    type,
-    email,
-    code,
-    issuedAt,
-    ...(name && { name }),
-    ...(token && { token }),
-  };
-  const deadIds: string[] = [];
-  for (const [id, controller] of connections) {
-    try {
-      sendToConnection(controller, type, ssePayload);
-    } catch {
-      deadIds.push(id);
-    }
-  }
-  for (const id of deadIds) {
-    connections.delete(id);
-  }
 }
 
 /**
- * Get the last emitted OTP for a type (test only). Used by e2e to avoid SSE timing issues.
+ * Get the last emitted OTP for a (type, email). Used by e2e and demo toast.
  */
-export function getLastTestOtp(type: TestOtpEventType): {
-  email: string;
-  code: string;
-  issuedAt: string;
-  name?: string;
-  token?: string;
-} | null {
-  return lastPayloads.get(type) ?? null;
+export function getLastTestOtp(type: TestOtpEventType, email: string): LastTestOtpPayload | null {
+  return lastPayloads.get(storageKey(type, email)) ?? null;
 }

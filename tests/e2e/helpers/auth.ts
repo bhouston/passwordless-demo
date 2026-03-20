@@ -17,19 +17,16 @@ async function typeIntoField(page: Page, label: RegExp, value: string) {
 
 async function getLatestOtpPayload(type: OtpType, email: string): Promise<{ code: string; token: string }> {
   const maxAttempts = 20;
+  const url = `${BASE_URL}/api/otp-latest?type=${type}&email=${encodeURIComponent(email)}`;
 
   for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetch(`${BASE_URL}/test-otp-latest?type=${type}`);
+    const res = await fetch(url);
     if (!res.ok) {
-      throw new Error(`test-otp-latest failed: ${res.status}`);
+      throw new Error(`api/otp-latest failed: ${res.status}`);
     }
 
-    const data = (await res.json()) as {
-      code?: string;
-      email?: string;
-      token?: string;
-    };
-    if (data.email === email && data.code && data.token) {
+    const data = (await res.json()) as { code?: string; token?: string };
+    if (data.code && data.token) {
       return { code: data.code, token: data.token };
     }
 
@@ -39,13 +36,14 @@ async function getLatestOtpPayload(type: OtpType, email: string): Promise<{ code
   throw new Error(`No ${type} payload received for ${email} within timeout`);
 }
 
-export async function getLastOtp(type: OtpType): Promise<{ code: string }> {
+export async function getLastOtp(type: OtpType, email: string): Promise<{ code: string }> {
   const maxAttempts = 20;
+  const url = `${BASE_URL}/api/otp-latest?type=${type}&email=${encodeURIComponent(email)}`;
 
   for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetch(`${BASE_URL}/test-otp-latest?type=${type}`);
+    const res = await fetch(url);
     if (!res.ok) {
-      throw new Error(`test-otp-latest failed: ${res.status}`);
+      throw new Error(`api/otp-latest failed: ${res.status}`);
     }
 
     const data = (await res.json()) as { code?: string };
@@ -56,7 +54,7 @@ export async function getLastOtp(type: OtpType): Promise<{ code: string }> {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
-  throw new Error(`No ${type} received within timeout`);
+  throw new Error(`No ${type} received for ${email} within timeout`);
 }
 
 export async function signUpViaOtp(

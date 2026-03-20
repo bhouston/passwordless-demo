@@ -82,7 +82,7 @@ The auth OTP and passkey flows can be tested end-to-end using Playwright. The OT
    E2E_BASE_URL=http://localhost:3001 pnpm test:e2e
    ```
 
-The `/test-otp-events` SSE endpoint and `/test-otp-latest` helper only respond when `NODE_ENV` is `development` or `test`; otherwise they return 401. The passkey e2e tests are Chromium-only because Playwright's virtual authenticator support uses Chromium CDP APIs.
+The `/api/otp-latest` helper is available in all environments. It requires query params `type` (`signup-otp` or `login-otp`) and `email`, and returns the latest OTP for that pair (for multi-user demo use). The passkey e2e tests are Chromium-only because Playwright's virtual authenticator support uses Chromium CDP APIs.
 
 ## Deployment (Docker / Cloud Run)
 
@@ -99,7 +99,7 @@ The **Dockerfile** is set up for **passwordless-login.benhouston3d.com**: it ini
    - In Cloud Run: set the env var (or use Secret Manager) in the deploy step.
 
 3. **Email OTP in production**  
-   This demo does **not** send real emails. OTP codes are only logged and broadcast via SSE in `development` / `test`. In **production**, the “request login/signup code” flow still creates and stores the code (no enumeration), but the user never receives it. **Passkey login works**; email OTP will not unless you add an email provider (e.g. Resend, SendGrid) and send the code in `src/server/auth.ts`.
+   This demo does **not** send real emails. The “request login/signup code” flow creates and stores the code (no enumeration). The code is exposed for demo use via `/api/otp-latest` (with `type` and `email`) and via the in-app toast for the requesting user, in all environments. **Passkey login works**; to deliver OTP by email in production you would add an email provider (e.g. Resend, SendGrid) and send the code in `src/server/auth.ts`.
 
 ### Optional: pass JWT_SECRET in Cloud Run deploy
 

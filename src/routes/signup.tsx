@@ -61,13 +61,13 @@ function SignupPage() {
       const result = await requestSignupOTPFn({ data: variables });
       return result;
     },
-    onSuccess: async (result) => {
+    onSuccess: async (result, variables) => {
       const token = result?.token;
       if (!token) {
         setFormError('Failed to get verification token. Please try again.');
         return;
       }
-      await showLastOtpToast('signup-otp');
+      await showLastOtpToast('signup-otp', variables.email);
       try {
         await navigate({
           to: '/signup/$signupToken',

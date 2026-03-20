@@ -1,14 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getLastTestOtp, isTestOtpSseEnabled } from '@/server/testOtpSse';
+import { getLastTestOtp } from '@/server/testOtpSse';
 import type { TestOtpEventType } from '@/server/testOtpSse';
+import { z } from 'zod';
 
-export const Route = createFileRoute('/test-otp-latest')({
+const emailParamSchema = z.string().min(1, 'Email is required').email('Invalid email');
+
+export const Route = createFileRoute('/api/otp-latest')({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!isTestOtpSseEnabled()) {
-          return new Response(null, { status: 401 });
-        }
         const url = new URL(request.url);
         const type = url.searchParams.get('type') as TestOtpEventType | null;
         if (type !== 'signup-otp' && type !== 'login-otp') {
@@ -17,7 +17,16 @@ export const Route = createFileRoute('/test-otp-latest')({
             headers: { 'Content-Type': 'application/json' },
           });
         }
-        const payload = getLastTestOtp(type);
+        const emailRaw = url.searchParams.get('email');
+        const emailResult = emailParamSchema.safeParse(emailRaw ?? '');
+        if (!emailResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Missing or invalid email (required for multi-user demo)' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
+        const email = emailResult.data;
+        const payload = getLastTestOtp(type, email);
         return new Response(JSON.stringify(payload ?? {}), {
           headers: { 'Content-Type': 'application/json' },
         });

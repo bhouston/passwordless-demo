@@ -430,17 +430,11 @@ export const verifyAuthenticationResponse = createServerFn({ method: 'POST' })
         };
       }
 
-      // Check signature counter (must be greater than stored counter)
+      // Signature counter is already validated by SimpleWebAuthn (only rejects when
+      // (counter > 0 || credential.counter > 0) && counter <= credential.counter, so 0/0 is allowed).
+      // Just persist the new counter for next time.
       if (verification.authenticationInfo) {
         const newCounter = verification.authenticationInfo.newCounter;
-        if (newCounter <= passkey.counter) {
-          return {
-            success: false,
-            error: 'Invalid signature counter. Possible cloned credential.',
-          };
-        }
-
-        // Update counter in database
         await db.update(passkeys).set({ counter: newCounter }).where(eq(passkeys.id, passkey.id));
       }
 

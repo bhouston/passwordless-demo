@@ -9,8 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestOtpLatestRouteImport } from './routes/test-otp-latest'
-import { Route as TestOtpEventsRouteImport } from './routes/test-otp-events'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRequestCodeRouteImport } from './routes/login-request-code'
@@ -21,18 +19,9 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupSignupTokenRouteImport } from './routes/signup.$signupToken'
 import { Route as LoginViaCodeCodeVerificationTokenRouteImport } from './routes/login-via-code.$codeVerificationToken'
+import { Route as ApiOtpLatestRouteImport } from './routes/api/otp-latest'
 import { Route as AuthedUserSettingsRouteImport } from './routes/_authed/user-settings'
 
-const TestOtpLatestRoute = TestOtpLatestRouteImport.update({
-  id: '/test-otp-latest',
-  path: '/test-otp-latest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestOtpEventsRoute = TestOtpEventsRouteImport.update({
-  id: '/test-otp-events',
-  path: '/test-otp-events',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -83,6 +72,11 @@ const LoginViaCodeCodeVerificationTokenRoute =
     path: '/login-via-code/$codeVerificationToken',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiOtpLatestRoute = ApiOtpLatestRouteImport.update({
+  id: '/api/otp-latest',
+  path: '/api/otp-latest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedUserSettingsRoute = AuthedUserSettingsRouteImport.update({
   id: '/user-settings',
   path: '/user-settings',
@@ -97,9 +91,8 @@ export interface FileRoutesByFullPath {
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
-  '/test-otp-events': typeof TestOtpEventsRoute
-  '/test-otp-latest': typeof TestOtpLatestRoute
   '/user-settings': typeof AuthedUserSettingsRoute
+  '/api/otp-latest': typeof ApiOtpLatestRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
@@ -111,9 +104,8 @@ export interface FileRoutesByTo {
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
-  '/test-otp-events': typeof TestOtpEventsRoute
-  '/test-otp-latest': typeof TestOtpLatestRoute
   '/user-settings': typeof AuthedUserSettingsRoute
+  '/api/otp-latest': typeof ApiOtpLatestRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
@@ -127,9 +119,8 @@ export interface FileRoutesById {
   '/login-request-code': typeof LoginRequestCodeRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRouteWithChildren
-  '/test-otp-events': typeof TestOtpEventsRoute
-  '/test-otp-latest': typeof TestOtpLatestRoute
   '/_authed/user-settings': typeof AuthedUserSettingsRoute
+  '/api/otp-latest': typeof ApiOtpLatestRoute
   '/login-via-code/$codeVerificationToken': typeof LoginViaCodeCodeVerificationTokenRoute
   '/signup/$signupToken': typeof SignupSignupTokenRoute
 }
@@ -143,9 +134,8 @@ export interface FileRouteTypes {
     | '/login-request-code'
     | '/logout'
     | '/signup'
-    | '/test-otp-events'
-    | '/test-otp-latest'
     | '/user-settings'
+    | '/api/otp-latest'
     | '/login-via-code/$codeVerificationToken'
     | '/signup/$signupToken'
   fileRoutesByTo: FileRoutesByTo
@@ -157,9 +147,8 @@ export interface FileRouteTypes {
     | '/login-request-code'
     | '/logout'
     | '/signup'
-    | '/test-otp-events'
-    | '/test-otp-latest'
     | '/user-settings'
+    | '/api/otp-latest'
     | '/login-via-code/$codeVerificationToken'
     | '/signup/$signupToken'
   id:
@@ -172,9 +161,8 @@ export interface FileRouteTypes {
     | '/login-request-code'
     | '/logout'
     | '/signup'
-    | '/test-otp-events'
-    | '/test-otp-latest'
     | '/_authed/user-settings'
+    | '/api/otp-latest'
     | '/login-via-code/$codeVerificationToken'
     | '/signup/$signupToken'
   fileRoutesById: FileRoutesById
@@ -188,27 +176,12 @@ export interface RootRouteChildren {
   LoginRequestCodeRoute: typeof LoginRequestCodeRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRouteWithChildren
-  TestOtpEventsRoute: typeof TestOtpEventsRoute
-  TestOtpLatestRoute: typeof TestOtpLatestRoute
+  ApiOtpLatestRoute: typeof ApiOtpLatestRoute
   LoginViaCodeCodeVerificationTokenRoute: typeof LoginViaCodeCodeVerificationTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/test-otp-latest': {
-      id: '/test-otp-latest'
-      path: '/test-otp-latest'
-      fullPath: '/test-otp-latest'
-      preLoaderRoute: typeof TestOtpLatestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/test-otp-events': {
-      id: '/test-otp-events'
-      path: '/test-otp-events'
-      fullPath: '/test-otp-events'
-      preLoaderRoute: typeof TestOtpEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -279,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginViaCodeCodeVerificationTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/otp-latest': {
+      id: '/api/otp-latest'
+      path: '/api/otp-latest'
+      fullPath: '/api/otp-latest'
+      preLoaderRoute: typeof ApiOtpLatestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed/user-settings': {
       id: '/_authed/user-settings'
       path: '/user-settings'
@@ -320,8 +300,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRequestCodeRoute: LoginRequestCodeRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRouteWithChildren,
-  TestOtpEventsRoute: TestOtpEventsRoute,
-  TestOtpLatestRoute: TestOtpLatestRoute,
+  ApiOtpLatestRoute: ApiOtpLatestRoute,
   LoginViaCodeCodeVerificationTokenRoute:
     LoginViaCodeCodeVerificationTokenRoute,
 }
