@@ -7,9 +7,7 @@ export type DemoOtpType = 'signup-otp' | 'login-otp';
  * No-ops when the response is not ok or no code is returned.
  */
 export async function showLastOtpToast(type: DemoOtpType, email: string): Promise<void> {
-  const res = await fetch(
-    `/api/otp-latest?type=${type}&email=${encodeURIComponent(email)}`,
-  );
+  const res = await fetch(`/api/otp-latest?type=${type}&email=${encodeURIComponent(email)}`);
   if (!res.ok) {
     return;
   }

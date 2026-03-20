@@ -22,7 +22,6 @@ import {
   verifyPasskeyDiscoveryToken,
 } from './jwt';
 import { requireUser } from './middleware';
-import { checkEmailRateLimit, checkIPRateLimit, hashJWT, markAttemptSuccessful, RateLimitError } from './rateLimit';
 
 /**
  * Convert userId to base64url encoded Uint8Array for WebAuthn userID
@@ -148,8 +147,8 @@ export const verifyRegistrationResponse = createServerFn({ method: 'POST' })
 
       const registrationInfo = verification.registrationInfo;
       const { credential } = registrationInfo;
-      const counter = (registrationInfo as any).counter ?? 0;
-      const transports = (registrationInfo as any).transports;
+      const counter = credential.counter ?? 0;
+      const transports = credential.transports;
 
       // Convert publicKey (Uint8Array) to base64url for storage
       const publicKeyBase64 = Buffer.from(credential.publicKey).toString('base64url');
@@ -192,22 +191,6 @@ export const initiatePasskeyDiscovery = createServerFn({
   // Create discovery token (challenge only, no userId)
   const token = await signPasskeyDiscoveryToken(options.challenge);
 
-  // Hash token for rate limiting
-  const tokenHash = hashJWT(token);
-
-  try {
-    // Check rate limits (IP only, no email)
-    await checkIPRateLimit('passkey-attempt', tokenHash);
-  } catch (error) {
-    if (error instanceof RateLimitError) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-    throw error;
-  }
-
   return {
     success: true,
     options,
@@ -233,15 +216,6 @@ export const initiatePasskeyAuthenticationForEmail = createServerFn({
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
     if (!user) {
-      try {
-        await checkIPRateLimit('passkey-attempt');
-        await checkEmailRateLimit(email, 'passkey-attempt');
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          return { success: false, error: error.message };
-        }
-        throw error;
-      }
       return {
         success: false,
         error: 'No account exists for that email.',
@@ -251,15 +225,6 @@ export const initiatePasskeyAuthenticationForEmail = createServerFn({
     const [passkeyRow] = await db.select().from(passkeys).where(eq(passkeys.userId, user.id)).limit(1);
 
     if (!passkeyRow) {
-      try {
-        await checkIPRateLimit('passkey-attempt');
-        await checkEmailRateLimit(email, 'passkey-attempt');
-      } catch (error) {
-        if (error instanceof RateLimitError) {
-          return { success: false, error: error.message };
-        }
-        throw error;
-      }
       return {
         success: false,
         error: 'This account does not have a passkey yet. Login with an email code and add a passkey in settings.',
@@ -295,20 +260,6 @@ export const initiatePasskeyAuthenticationForEmail = createServerFn({
 
     const options = await swaGenerateAuthenticationOptions(opts);
     const token = await signPasskeyChallengeToken(options.challenge, user.id, user.email);
-    const tokenHash = hashJWT(token);
-
-    try {
-      await checkIPRateLimit('passkey-attempt', tokenHash);
-      await checkEmailRateLimit(email, 'passkey-attempt', tokenHash);
-    } catch (error) {
-      if (error instanceof RateLimitError) {
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
-      throw error;
-    }
 
     return {
       success: true,
@@ -437,10 +388,6 @@ export const verifyAuthenticationResponse = createServerFn({ method: 'POST' })
         const newCounter = verification.authenticationInfo.newCounter;
         await db.update(passkeys).set({ counter: newCounter }).where(eq(passkeys.id, passkey.id));
       }
-
-      // Mark rate limit attempt as successful
-      const tokenHash = hashJWT(data.token);
-      await markAttemptSuccessful(tokenHash, 'passkey-attempt');
 
       // Set authentication cookie on successful verification
       if (!userId) {

@@ -91,7 +91,7 @@ The **Dockerfile** is set up for **passwordless-login.benhouston3d.com**: it ini
 ### What you should configure
 
 1. **HTTPS and hostname**  
-   The site must be served over **HTTPS** at **passwordless-login.benhouston3d.com** (WebAuthn requires a secure origin). Point your DNS and reverse proxy (or Cloud Run custom domain) at the service so the browser URL is exactly that. The app already uses `getRequestIP({ xForwardedFor: true })` for rate limiting behind a proxy.
+   The site must be served over **HTTPS** at **passwordless-login.benhouston3d.com** (WebAuthn requires a secure origin). Point your DNS and reverse proxy (or Cloud Run custom domain) at the service so the browser URL is exactly that.
 
 2. **JWT_SECRET (recommended)**  
    The image has a default `JWT_SECRET`; if you don’t override it, every new container (or redeploy) will use a different secret and existing sessions will be invalidated. For stable logins across deploys, set `JWT_SECRET` at runtime (e.g. Cloud Run env or secret):

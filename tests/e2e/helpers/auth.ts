@@ -95,7 +95,6 @@ export async function signUpViaOtp(
 
 export async function logout(page: Page) {
   await page.goto(`${BASE_URL}/logout`);
-  await page.getByRole('button', { name: /log out/i }).click();
   await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
 }
 

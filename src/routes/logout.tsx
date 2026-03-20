@@ -1,9 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
+import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
+import { useEffect, useRef, useState } from 'react';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button } from '@/components/ui/button';
-import { useSessionUser } from '@/hooks/useSessionUser';
 import { useToastMutation } from '@/hooks/useToastMutation';
 import { logout } from '@/server/auth';
 import { getUserWithPasskey } from '@/server/user';
@@ -26,8 +26,9 @@ export const Route = createFileRoute('/logout')({
 function LogoutPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { sessionUser } = useSessionUser();
   const logoutFn = useServerFn(logout);
+  const hasStartedRef = useRef(false);
+  const [error, setError] = useState<string>();
 
   const logoutMutation = useToastMutation({
     action: 'Logout',
@@ -39,30 +40,36 @@ function LogoutPage() {
       await queryClient.clear();
       await router.navigate({ to: '/login' });
     },
+    onError: async (err) => {
+      setError(err instanceof Error ? err.message : 'Failed to log out.');
+    },
   });
 
+  useEffect(() => {
+    if (hasStartedRef.current) {
+      return;
+    }
+
+    hasStartedRef.current = true;
+    logoutMutation.mutate();
+  }, [logoutMutation]);
+
   return (
-    <AuthLayout title="Logout">
+    <AuthLayout title={error ? 'Logout Failed' : 'Logging out...'}>
       <div className="space-y-4">
-        {sessionUser && (
-          <p className="text-center text-muted-foreground">
-            You are currently logged in as{' '}
-            <span className="font-semibold text-foreground">{sessionUser.name || sessionUser.email}</span>
-          </p>
+        <p className="text-center text-muted-foreground">
+          {error ? error : 'Please wait while we clear your session...'}
+        </p>
+        {error && (
+          <div className="flex flex-col gap-2">
+            <Button onClick={() => logoutMutation.mutate()} disabled={logoutMutation.isPending} className="w-full">
+              Try again
+            </Button>
+            <Button asChild={true} className="w-full" variant="outline">
+              <Link to="/login">Back to Login</Link>
+            </Button>
+          </div>
         )}
-        <div className="flex flex-col gap-2">
-          <Button
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
-            className="w-full"
-            variant="destructive"
-          >
-            {logoutMutation.isPending ? 'Logging out...' : 'Log Out'}
-          </Button>
-          <Button onClick={() => router.navigate({ to: '/user-settings' })} className="w-full" variant="outline">
-            Cancel
-          </Button>
-        </div>
       </div>
     </AuthLayout>
   );

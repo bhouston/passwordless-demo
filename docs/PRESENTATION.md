@@ -68,7 +68,7 @@ Unlike traditional 2FA authenticator apps (which provide a secondary authenticat
 The 8-character alphanumeric format provides approximately **2.8 million times** more entropy than 6-digit numeric codes. This massive keyspace ensures that:
 
 1. **Brute-force attacks are computationally infeasible** - Even with unlimited attempts, an attacker would need to try trillions of combinations
-2. **Rate limiting becomes less critical** - While we still implement rate limiting, the large keyspace provides defense-in-depth
+2. **Rate limiting becomes less critical** - The large keyspace already provides strong defense against brute-force guessing in this demo
 3. **Primary authentication security** - Since there's no password as a first factor, the OTP code must be strong enough to stand alone
 
 > **Speaker Note:** "You might wonder why we don't just use 6-digit codes like authenticator apps. The key difference is that authenticator codes are a _second_ factor - you still need a password first. Our OTP codes are the _only_ factor. That means they need to be strong enough to resist brute-force attacks on their own. 8 alphanumeric characters gives us 2.8 trillion possible combinations versus just 1 million for 6 digits. That's the difference between 'hard to guess' and 'computationally impossible to guess'."

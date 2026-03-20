@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start';
-import { getRequestIP } from '@tanstack/react-start/server';
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -8,14 +7,6 @@ import { users, userAuthAttempts } from '@/db/schema';
 import { clearAppSession, setSessionUserId } from './appSession';
 import { getEnvConfig } from './env';
 import { signCodeVerificationToken, verifyCodeVerificationToken } from './jwt';
-import {
-  checkEmailRateLimit,
-  checkIPRateLimit,
-  hashJWT,
-  markAttemptAsBadEmail,
-  markAttemptSuccessful,
-  RateLimitError,
-} from './rateLimit';
 import { broadcastTestOtp } from './testOtpSse';
 
 // Zod schemas for validation
@@ -74,17 +65,6 @@ function hashOTPCode(code: string): string {
 export const requestSignupOTP = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => signupSchema.parse(data))
   .handler(async ({ data }) => {
-    try {
-      // Check rate limits (both IP and email)
-      await checkIPRateLimit('signup-otp');
-      await checkEmailRateLimit(data.email, 'signup-otp');
-    } catch (error) {
-      if (error instanceof RateLimitError) {
-        throw new Error(error.message, { cause: error });
-      }
-      throw error;
-    }
-
     // Check if email already exists
     const existingUser = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
 
@@ -119,10 +99,6 @@ export const requestSignupOTP = createServerFn({ method: 'POST' })
 
     // Sign JWT token with userAuthAttemptId
     const token = await signCodeVerificationToken(null, data.email, attempt.id);
-    const tokenHash = hashJWT(token);
-
-    // Mark attempt as successful
-    await markAttemptSuccessful(tokenHash, 'signup-otp');
 
     // Console log + SSE broadcast (development/test only)
     broadcastTestOtp({
@@ -262,17 +238,6 @@ export const verifySignupOTPAndCreateUser = createServerFn({
 export const requestLoginCode = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => requestLoginCodeSchema.parse(data))
   .handler(async ({ data }) => {
-    try {
-      // Check rate limits (both IP and email)
-      await checkIPRateLimit('login-code');
-      await checkEmailRateLimit(data.email, 'login-code');
-    } catch (error) {
-      if (error instanceof RateLimitError) {
-        throw new Error(error.message, { cause: error });
-      }
-      throw error;
-    }
-
     // Look up user by email
     const [user] = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
 
@@ -304,10 +269,6 @@ export const requestLoginCode = createServerFn({ method: 'POST' })
 
     // Sign JWT token with userAuthAttemptId
     const token = await signCodeVerificationToken(user?.id ?? null, data.email, attempt.id);
-    const tokenHash = hashJWT(token);
-
-    // Mark attempt as successful
-    await markAttemptSuccessful(tokenHash, 'login-code');
 
     if (user) {
       // Console log + SSE broadcast (development/test only)
@@ -318,10 +279,6 @@ export const requestLoginCode = createServerFn({ method: 'POST' })
         token,
       });
     } else {
-      // User doesn't exist - mark attempt as bad-email
-      await markAttemptAsBadEmail(getRequestIP({ xForwardedFor: true }) ?? 'unknown', 'ip', 'login-code');
-      await markAttemptAsBadEmail(data.email.toLowerCase(), 'email', 'login-code');
-
       // Log the message to console (instead of sending email)
       if (env.NODE_ENV === 'development') {
         const signupUrl = `${env.BASE_URL}/signup`;
@@ -429,10 +386,6 @@ export const verifyLoginCodeAndAuthenticate = createServerFn({
 
         // Mark attempt as used
         await db.update(userAuthAttempts).set({ used: true }).where(eq(userAuthAttempts.id, attempt.id));
-
-        // Mark rate limit attempt as successful
-        const tokenHash = hashJWT(data.token);
-        await markAttemptSuccessful(tokenHash, 'login-code');
 
         await setSessionUserId(attempt.userId);
 

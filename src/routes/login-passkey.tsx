@@ -35,7 +35,7 @@ function LoginPasskeyPage() {
         const result = await generateAuthOptions({});
 
         if (!result.success || !result.options || !result.token) {
-          throw new Error(result.error || 'Failed to generate authentication options');
+          throw new Error('Failed to generate authentication options');
         }
 
         // Start WebAuthn authentication

@@ -20,10 +20,10 @@ export const Route = createFileRoute('/api/otp-latest')({
         const emailRaw = url.searchParams.get('email');
         const emailResult = emailParamSchema.safeParse(emailRaw ?? '');
         if (!emailResult.success) {
-          return new Response(
-            JSON.stringify({ error: 'Missing or invalid email (required for multi-user demo)' }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } },
-          );
+          return new Response(JSON.stringify({ error: 'Missing or invalid email (required for multi-user demo)' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
         }
         const email = emailResult.data;
         const payload = getLastTestOtp(type, email);
