@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-FROM --platform=linux/amd64 node:22-slim AS base
+FROM --platform=linux/amd64 node:24-slim AS base
 
 # Omit NODE_ENV=production so devDependencies (e.g. drizzle-kit) are installed for db:push
 ENV PNPM_HOME="/pnpm" \
